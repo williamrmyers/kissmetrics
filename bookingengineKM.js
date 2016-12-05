@@ -87,7 +87,7 @@ function trigger_book_now(){
 		$('.btn-success').click(function () {
 			b_tags = $("b")
 		    var id = this.parentNode.previousElementSibling.id;
-		   	_kmq.push(['record', 'clicked booknow', {'Book Now Rate': b_tags[Number(id.replace(/\D/g,'')) + 1].innerHTML, 'Day Selected at TeeTimes': $('.day.active').html() }]);
+		   	_kmq.push(['record', 'clicked booknow', {'Book Now Rate': b_tags[Number(id.replace(/\D/g,'')) + 1].innerHTML, 'Day Selected at TeeTimes': $('.day.active').html()+ ", " + $('.switch').html() }]);
 		})
 	}, 1000);
 }
