@@ -82,23 +82,41 @@ function create_profile_form () {
 
 // Book now trigger
 
-function trigger_book_now(){
+// This function should be triggered when you click the calender or need to reset the event listeners
+function trigger_book_now_internal(){
 	setTimeout(function(){
 		$('.btn-success').click(function () {
 			b_tags = $("b")
 		    var id = this.parentNode.previousElementSibling.id;
-		   	_kmq.push(['record', 'clicked booknow', {'Book Now Rate': b_tags[Number(id.replace(/\D/g,'')) + 1].innerHTML, 'Day Selected at TeeTimes': $('.day.active').html() }]);
+		   	_kmq.push(['record', 'clicked booknow', {'Book Now Rate': b_tags[Number(id.replace(/\D/g,'')) + 1].innerHTML, 'Day Selected at TeeTimes': $('.day.active').html()+ ", " + $('.switch').html() }]);
 		})
 	}, 1000);
 }
 
+
+
+// This will fire a listener check if the page is fully loaded every second and after it is will set an event listener.
+// This function should be called when you visit a route where the "Book Now"Buttons exist
+function check_book_now() {
+	// This will be set to false so we only fire this function once.
+	var book_now_page_loaded = "false"
+		setInterval(function(){ 
+				if (book_now_page_loaded =="false") {
+					if ($('#p0+ .panel-footer .btn-success').html() == "Book Now") {
+						trigger_book_now_internal()
+						book_now_page_loaded = "true"
+					}
+				}
+		}, 500);
+
+}
 // Book now trigger End
 
 // sets book now on calander click, as well as when a user clicks a filter
 
 function tracked_calander() {
 	$('#filters').click(function(){ 
-		trigger_book_now()
+		trigger_book_now_internal()
 	});
 }
 
@@ -178,9 +196,9 @@ function KM_track_courseinfo() {
 function KM_track_teetimes() {
 	console.log("Course Tee Times")
 	setUserSignIn()
-	trigger_book_now()
+	check_book_now()
 	tracked_calander()
-  day_selected()
+  	// day_selected()
 }
 
 
@@ -222,5 +240,10 @@ current_url = window.location.hash
 
 // triggers the test_url avery few milliseconds
 setInterval("test_url()", 500)
-  
+
+// triggers the set listeners function when the iframe is loaded for the first time.
+$( document ).ready(function() {
+    set_listeners()
+});
+
 </script>
