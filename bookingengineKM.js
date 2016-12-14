@@ -85,9 +85,22 @@ function create_profile_form () {
 function trigger_book_now(){
 	setTimeout(function(){
 		$('.btn-success').click(function () {
-			b_tags = $("b")
+			b_tags = $("b");
 		    var id = this.parentNode.previousElementSibling.id;
-		   	_kmq.push(['record', 'clicked booknow', {'Book Now Rate': b_tags[Number(id.replace(/\D/g,'')) + 1].innerHTML, 'Day Selected at TeeTimes': $('.day.active').html()+ ", " + $('.switch').html() }]);
+		    console.log('triggering book now');
+		   	_kmq.push(['record', 'clicked booknow', {
+		   		'Book Now Rate': b_tags[Number(id.replace(/\D/g,'')) + 1].innerHTML, 
+		   		'Day Selected at TeeTimes': $('.day.active').html()+ ", " + $('.switch').html(),
+		   		//'Course Name': $('.coursename').parent('.panel-heading').html(),
+		   		//'Time': $('.teeparent+ .teeparent .panel-title').html(),
+		   		// 'Special': special(function(){
+		   		// 	if ( $('.teetime').find('.ribspec').length > 0 ) {
+		   		// 		console.log('yes');
+		   		// 	} else {
+		   		// 		console.log('no');
+		   		// 	}
+		   		// })
+		   	}]);
 		})
 	}, 1000);
 }
@@ -100,6 +113,25 @@ function tracked_calander() {
 	$('#filters').click(function(){ 
 		trigger_book_now()
 	});
+}
+
+// #bookdetails content
+// Course Name, Date, Time, Weather, # of Golfers, Total Due @ Course 
+// Next step is either Login and Continue or Create Profile and Continue
+// This works but it records the submission 5 times with Number of Golfers different at each one
+
+function bookingDetails() {
+	$('#btnBookTeeTimeProfile, #btnBookTeeTime').click(function(){
+		_kmq.push(['record', 'Viewed Booking Details', {
+		    'Course Name':$('#tdLeft tr:nth-child(1) td:nth-child(2)').html(),
+		    'Date': $('#tdLeft tr:nth-child(2) td:nth-child(2)').html(),
+		    'Time': $('#tdLeft tr:nth-child(3) td:nth-child(2)').html(),
+		    'Number of Golfers': $('a.bookqty.btn.btn-default.active').text(),
+		    'Temperature': $('.weather_temp').html(),
+		    'Weather': $('.text-right').html().split('</h2>')[1]
+		}]);
+	})
+	console.log('booking details ran');
 }
 
 // runs on the #bookteetime route
@@ -120,18 +152,19 @@ function completed_purchase() {
 
 // Day selected on calendar before hitting "book now"
 
-//function day_selected() {
-//	$('.day').click(function(){
-//		whatDay()
-//	})
-//};
+// function day_selected() {
+// 	$('.day').click(function(){
+// 		whatDay()
+// 	})
+// };
 
-//function whatDay() {
-//	var day = $('.active+ .day').html();
-//	_kmq.push(['record', 'Selected Date', {
-//		'Selected Date':$('.active+ .day').html()
-//	}])	
-//};
+// function whatDay() {
+// 	_kmq.push(['record', 'Selected Date', {
+// 		'Selected Date':$('.active+ .day').html()
+// 		'Course Name': $('.teeparent .coursename').html(),
+// 		'Special': $('.ribbon .ribspec').html()
+// 	}])	
+// };
 
 // End general functions
 
@@ -159,6 +192,7 @@ function KM_track_bookteetime() {
 function KM_track_bookdetails() {
 	console.log("On Booking details")
 	setUserSignIn()
+	bookingDetails()
 }
 
 // tracks #createprofile
@@ -180,7 +214,7 @@ function KM_track_teetimes() {
 	setUserSignIn()
 	trigger_book_now()
 	tracked_calander()
-  day_selected()
+  	//day_selected()
 }
 
 
@@ -201,7 +235,7 @@ function set_listeners() {
 		KM_track_courseinfo()
 	}
 	if (window.location.hash ==="" || window.location.hash ==="#teetimes") {
-      KM_track_teetimes()
+      	KM_track_teetimes()
 	}
 }
 
