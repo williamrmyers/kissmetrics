@@ -1,13 +1,16 @@
 <script type="text/javascript">
 
-// sets vars to current url
+// Sets vars to current url
+
  previous_url = window.location.hash
 
  current_url = window.location.hash
 
-// here we will define the a function for each page. This page will set event listeners for that page, that will create Kissmetrics API calls to setup tracking
+// Here we will define the a function for each page. This page will set event listeners for that page, that will create Kissmetrics API calls to setup tracking
 
-// General function
+// Functions
+
+// Tracks User Sign In - Email
 
 function setUserSignIn() {
 	$('#navbar_signin').click(function(){ 
@@ -16,7 +19,7 @@ function setUserSignIn() {
 		    'Email':$('#inputUsername').val()
 		}]);
 	});
-// Tracks Modal
+// Tracks User Sign In - Email on Tablet Mobile
 	$('#modal_signin').click(function(){ 
 		_kmq.push(['identify',$('#inputUsername2').val()]);
 		_kmq.push(['record', 'Signed In', {
@@ -26,25 +29,10 @@ function setUserSignIn() {
 
 }
 
-// Tracks the confirmation page by checking if we are on the page, and then tracking it only once
+// End Track User Sign In
 
-var confirmation_sent_to_KM = "false";
+// Tracks Signups on Create Profile 
 
-function check_if_confirmation_page(){
-	if ( $('tr:nth-child(6) td:nth-child(1)').html() == 'Confirmation:' ) {
-		if (confirmation_sent_to_KM == "false") {
-		
-			completed_purchase()
-			confirmation_sent_to_KM = "true";
-		}
-	}
-}
-
-setInterval("check_if_confirmation_page()", 1000)
-
-// end confirmation page
-
-// tracks signups on createprofile
 function create_profile_form () {
 	$('.btnNext').click(function(){ 
 		_kmq.push(['identify',$('#createEmail').val()]);
@@ -54,8 +42,6 @@ function create_profile_form () {
 		// add callback here
 		track_page_create_profile_2()
 	}); 
-
-
 
 	function track_page_create_profile_2() {
 		$('.btnNext').click(function(){ 
@@ -78,63 +64,121 @@ function create_profile_form () {
 		}); 
 	}
 }
-// End tracks signups on createprofile
+// End Tracks Signups on Create Profile
 
-// Book now trigger
+// Day selected on calendar before hitting "book now"
 
-function trigger_book_now(){
-	setTimeout(function(){
-		$('.btn-success').click(function () {
-			b_tags = $("b");
-		    var id = this.parentNode.previousElementSibling.id;
-		    console.log('triggering book now');
-		   	_kmq.push(['record', 'clicked booknow', {
-		   		'Book Now Rate': b_tags[Number(id.replace(/\D/g,'')) + 1].innerHTML, 
-		   		'Day Selected at TeeTimes': $('.day.active').html()+ ", " + $('.switch').html(),
-		   		//'Course Name': $('.coursename').parent('.panel-heading').html(),
-		   		//'Time': $('.teeparent+ .teeparent .panel-title').html(),
-		   		// 'Special': special(function(){
-		   		// 	if ( $('.teetime').find('.ribspec').length > 0 ) {
-		   		// 		console.log('yes');
-		   		// 	} else {
-		   		// 		console.log('no');
-		   		// 	}
-		   		// })
-		   	}]);
-		})
-	}, 1000);
-}
+//function day_selected() {
+//	$('.day').click(function(){
+//		whatDay()
+//	})
+//};
 
-// Book now trigger End
+//function whatDay() {
+//	var day = $('.active+ .day').html();
+//	_kmq.push(['record', 'Selected Date', {
+//		'Selected Date':$('.active+ .day').html()
+//	}])	
+//};
 
-// sets book now on calander click, as well as when a user clicks a filter
+// Sets Book Now button on Calander click, as well as when a user clicks a filter
 
 function tracked_calander() {
 	$('#filters').click(function(){ 
-		trigger_book_now()
+		trigger_book_now_internal()
 	});
 }
 
-// #bookdetails content
-// Course Name, Date, Time, Weather, # of Golfers, Total Due @ Course 
-// Next step is either Login and Continue or Create Profile and Continue
-// This works but it records the submission 5 times with Number of Golfers different at each one
+// Start Book Now trigger
 
-function bookingDetails() {
-	$('#btnBookTeeTimeProfile, #btnBookTeeTime').click(function(){
-		_kmq.push(['record', 'Viewed Booking Details', {
-		    'Course Name':$('#tdLeft tr:nth-child(1) td:nth-child(2)').html(),
-		    'Date': $('#tdLeft tr:nth-child(2) td:nth-child(2)').html(),
-		    'Time': $('#tdLeft tr:nth-child(3) td:nth-child(2)').html(),
-		    'Number of Golfers': $('a.bookqty.btn.btn-default.active').text(),
-		    'Temperature': $('.weather_temp').html(),
-		    'Weather': $('.text-right').html().split('</h2>')[1]
-		}]);
-	})
-	console.log('booking details ran');
+// This function should be triggered when you click the calender or need to reset the event listeners
+function trigger_book_now_internal(){
+	setTimeout(function(){
+		$('.teetime').each(function () {
+			var $this = $(this);
+			var $btn = $this.find('.btn-success');
+			var _booknow_coursename = $this.find('.coursename').text();
+			var _special = $this.find('.ribbon')
+			var _price = $this.find('.rateset b').text();
+
+			$btn.click(function (e) {
+				// console.log(_booknow_coursename, _special, _price);
+				
+				if (_special.html() == '') {
+					// console.log('Is Special')
+					var _is_special="Special"
+				} else {
+					var _is_special='Not Special'
+					// console.log('Not Special')
+				}
+
+
+				_kmq.push(['record', 'clicked booknow', {
+					'Book Now Rate': _price,
+					'Day Selected at TeeTimes': $('.day.active').html()+ ", " + $('.switch').html(),
+					'Booknow Facility Name':_booknow_coursename,
+					'Booknow Special': _is_special
+				}]);
+			});
+		});
+	}, 1000);
 }
 
-// runs on the #bookteetime route
+// This will fire a listener check if the page is fully loaded every second and after it is will set an event listener.
+// This function should be called when you visit a route where the "Book Now" Buttons exist
+function check_book_now() {
+	// This will be set to false so we only fire this function once.
+	var book_now_page_loaded = "false"
+		setInterval(function(){ 
+				if (book_now_page_loaded =="false") {
+					if ($('#p0+ .panel-footer .btn-success').html() == "Book Now") {
+						trigger_book_now_internal()
+						book_now_page_loaded = "true"
+					}
+				}
+		}, 500);
+
+}
+// End Book Now Trigger
+
+
+// #bookdetails content when they go to login or create profile to book tee time
+
+function bookingDetails() {
+	setTimeout(function(){
+		$('#btnBookTeeTimeProfile').click(function(){
+			_kmq.push(['record', 'Viewed Booking Details', {
+			    'Course Name':$('#tdLeft tr:nth-child(1) td:nth-child(2)').html(),
+			    'Date': $('#tdLeft tr:nth-child(2) td:nth-child(2)').html(),
+			    'Time': $('#tdLeft tr:nth-child(3) td:nth-child(2)').html(),
+			    'Number of Golfers': $('a.bookqty.btn.btn-default.active').text(),
+			    'Total Due at Course': $('#pricePreview tr:nth-child(3) td:nth-child(2)').html(),
+			    'Temperature': $('.weather_temp').html(),
+			    'Weather': $('.text-right').html().split('</h2>')[1]
+			}]);
+		})
+	}, 1500);
+}
+
+// Tracks the confirmation page by checking if we are on the page, and then tracking it only once
+
+var confirmation_sent_to_KM = "false";
+
+function check_if_confirmation_page(){
+	if ( $('tr:nth-child(6) td:nth-child(1)').html() == 'Confirmation:' ) {
+		if (confirmation_sent_to_KM == "false") {
+		
+			completed_purchase()
+			confirmation_sent_to_KM = "true";
+		}
+	}
+}
+
+setInterval("check_if_confirmation_page()", 1000)
+
+// End confirmation page check
+
+// Completed Purchase runs on the #bookteetime hash
 
 function completed_purchase() {
 	setTimeout(function(){
@@ -150,27 +194,13 @@ function completed_purchase() {
 	}, 1500);
 }
 
-// Day selected on calendar before hitting "book now"
-
-// function day_selected() {
-// 	$('.day').click(function(){
-// 		whatDay()
-// 	})
-// };
-
-// function whatDay() {
-// 	_kmq.push(['record', 'Selected Date', {
-// 		'Selected Date':$('.active+ .day').html()
-// 		'Course Name': $('.teeparent .coursename').html(),
-// 		'Special': $('.ribbon .ribspec').html()
-// 	}])	
-// };
+// End Completed Purchase
 
 // End general functions
 
 // tracks #bookteetime
 function KM_track_bookteetime() {
-	console.log("book tee time listener set")
+	// console.log("book tee time listener set")
 	// viewed page event
 	_kmq.push(['record', 'Viewed Bookteetime Form']);	
 	$('#btnBookTeeTime').click(function(){ 
@@ -190,38 +220,37 @@ function KM_track_bookteetime() {
   
 // tracks #bookdetails
 function KM_track_bookdetails() {
-	console.log("On Booking details")
+	// console.log("On Booking details")
 	setUserSignIn()
 	bookingDetails()
 }
 
 // tracks #createprofile
 function KM_track_createprofile() {
-	console.log("On Create Profile")
+	// console.log("On Create Profile")
 	setUserSignIn()
 	create_profile_form()
 }
 
 // tracks #courseinfo
 function KM_track_courseinfo() {
-	console.log("Course Info")
+	// console.log("Course Info")
 	setUserSignIn()
 }
 
-// tracks #Teetimes or an empty string
+// tracks #teetimes or an empty string
 function KM_track_teetimes() {
-	console.log("Course Tee Times")
+	// console.log("Course Tee Times")
 	setUserSignIn()
-	trigger_book_now()
+	check_book_now()
 	tracked_calander()
-  	//day_selected()
 }
 
 
-// checks which event listers should be fired
+// checks which event listers should be fired based on hash
 
 function set_listeners() {
-	console.log("Listeners set")
+	// console.log("Listeners set")
 	if (window.location.hash ==="#bookteetime") {
 		KM_track_bookteetime()
 	}
@@ -235,7 +264,7 @@ function set_listeners() {
 		KM_track_courseinfo()
 	}
 	if (window.location.hash ==="" || window.location.hash ==="#teetimes") {
-      	KM_track_teetimes()
+      KM_track_teetimes()
 	}
 }
 
@@ -247,7 +276,7 @@ current_url = window.location.hash
 // console.log( current_url )
 
 	if (current_url != previous_url) {
-		console.log("URL CHANGED")
+		// console.log("URL CHANGED")
 		set_listeners()
 		previous_url = current_url
 	}
@@ -256,5 +285,10 @@ current_url = window.location.hash
 
 // triggers the test_url avery few milliseconds
 setInterval("test_url()", 500)
-  
+
+// triggers the set listeners function when the iframe is loaded for the first time.
+$( document ).ready(function() {
+    set_listeners()
+});
+
 </script>
